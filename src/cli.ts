@@ -2,7 +2,7 @@
 import { writeFile } from 'node:fs/promises';
 import { Command, InvalidArgumentError, Option } from 'commander';
 import { analyze, type OutputFormat } from './commands/analyze.js';
-import { compareResults, renderComparisonMarkdown } from './commands/compare.js';
+import { compareResults, DEFAULT_TOLERANCE_PERCENT, renderComparisonMarkdown } from './commands/compare.js';
 import { loadPolicy } from './config/load-policy.js';
 import { GitHubActionsClient } from './input/github-client.js';
 import { loadDatasetFile } from './input/load-file.js';
@@ -80,7 +80,12 @@ export async function main(argv: readonly string[] = process.argv): Promise<numb
     .description('compare two versioned analysis reports')
     .requiredOption('--baseline <path>', 'baseline JSON report')
     .requiredOption('--current <path>', 'current JSON report')
-    .option('-t, --tolerance <percent>', 'allowed directional regression percentage', parseTolerance, 5)
+    .option(
+      '-t, --tolerance <percent>',
+      'allowed directional regression percentage',
+      parseTolerance,
+      DEFAULT_TOLERANCE_PERCENT,
+    )
     .option('-o, --output <path>', 'write the Markdown comparison to a file')
     .action(async (options: CompareOptions) => {
       const [baseline, current] = await Promise.all([

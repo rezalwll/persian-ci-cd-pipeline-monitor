@@ -3,7 +3,7 @@ import {
   analyze,
   loadPolicy,
   safeErrorMessage
-} from "./chunk-KQFWES66.js";
+} from "./chunk-EQJQBG7X.js";
 
 // src/action.ts
 import { appendFile as appendFile2 } from "fs/promises";

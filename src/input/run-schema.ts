@@ -11,6 +11,8 @@ const conclusionSchema = z.enum([
   'action_required',
 ]);
 
+const MINIMUM_SHORT_SHA_LENGTH = 7;
+
 const jobSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1),
@@ -26,7 +28,7 @@ const runSchema = z.object({
   name: z.string().min(1),
   path: z.string().min(1),
   head_branch: z.string().min(1),
-  head_sha: z.string().min(7),
+  head_sha: z.string().min(MINIMUM_SHORT_SHA_LENGTH),
   event: z.string().min(1),
   conclusion: conclusionSchema,
   created_at: z.string().datetime({ offset: true }),

@@ -7,13 +7,17 @@ const severityLabel: Readonly<Record<Severity, string>> = {
   error: 'ERROR',
 };
 
+const MILLISECONDS_PER_MINUTE = 60_000;
+const METRIC_LABEL_WIDTH = 18;
+const METRIC_VALUE_WIDTH = 8;
+
 function formatValue(metric: MetricValue): string {
   if (metric.unit === 'percent') {
     return `${metric.value.toFixed(1)}%`;
   }
 
-  return metric.value >= 60_000
-    ? `${(metric.value / 60_000).toFixed(1)}m`
+  return metric.value >= MILLISECONDS_PER_MINUTE
+    ? `${(metric.value / MILLISECONDS_PER_MINUTE).toFixed(1)}m`
     : `${Math.round(metric.value / 1_000)}s`;
 }
 
@@ -26,7 +30,7 @@ function colorSeverity(severity: Severity, value: string, color: boolean): strin
 
 export function renderText(result: AnalysisResult, color = false): string {
   const metricLines = Object.values(result.metrics).map(
-    (metric) => `  ${metric.key.padEnd(18)} ${formatValue(metric).padStart(8)}  n=${metric.sampleSize}`,
+    (metric) => `  ${metric.key.padEnd(METRIC_LABEL_WIDTH)} ${formatValue(metric).padStart(METRIC_VALUE_WIDTH)}  n=${metric.sampleSize}`,
   );
   const findingLines = result.findings.length === 0
     ? ['  No policy findings.']

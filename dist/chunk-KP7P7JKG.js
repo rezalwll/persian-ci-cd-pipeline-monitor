@@ -1,6 +1,7 @@
 // src/commands/compare.ts
 var lowerIsBetter = /* @__PURE__ */ new Set(["durationP95Ms", "queueP95Ms", "flakyJobRate"]);
-function compareResults(baseline, current, tolerancePercent = 5) {
+var DEFAULT_TOLERANCE_PERCENT = 5;
+function compareResults(baseline, current, tolerancePercent = DEFAULT_TOLERANCE_PERCENT) {
   if (baseline.repository !== current.repository) {
     throw new Error("Baseline and current reports must target the same repository");
   }
@@ -44,6 +45,7 @@ function renderComparisonMarkdown(result) {
 }
 
 export {
+  DEFAULT_TOLERANCE_PERCENT,
   compareResults,
   renderComparisonMarkdown
 };

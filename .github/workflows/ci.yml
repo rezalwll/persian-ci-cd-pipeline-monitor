@@ -44,3 +44,29 @@ jobs:
         uses: docker://rhysd/actionlint:1.7.7
         with:
           args: -color
+
+  distributable-contract:
+    name: Distributable and supply-chain contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Reject known dependency vulnerabilities
+        run: npm audit --audit-level=low
+      - name: Rebuild every public entrypoint
+        run: npm run build
+      - name: Verify the checked-in Action bundle
+        run: git diff --exit-code -- dist
+      - name: Validate Action metadata and entrypoint
+        run: >-
+          node --input-type=module -e
+          "import { readFile } from 'node:fs/promises';
+          import { parse } from 'yaml';
+          const action = parse(await readFile('action.yml', 'utf8'));
+          if (action.runs?.main !== 'dist/action.js') throw new Error('Unexpected Action entrypoint');
+          await import('./dist/action.js');"

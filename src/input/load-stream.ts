@@ -1,6 +1,7 @@
 import type { RunDataset } from '../domain/run.js';
 import { parseRunDataset } from './run-schema.js';
 
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers -- Standard input is capped at ten mebibytes.
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024;
 
 export async function loadDatasetStream(

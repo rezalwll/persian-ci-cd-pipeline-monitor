@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 import {
+  DEFAULT_TOLERANCE_PERCENT,
   compareResults,
   renderComparisonMarkdown
-} from "./chunk-62FSVXFG.js";
+} from "./chunk-KP7P7JKG.js";
 import {
   GitHubActionsClient,
   analyze,
   loadPolicy,
   parseRunDataset,
   safeErrorMessage
-} from "./chunk-KQFWES66.js";
+} from "./chunk-EQJQBG7X.js";
 
 // src/cli.ts
 import { writeFile } from "fs/promises";
@@ -169,7 +170,12 @@ async function main(argv = process.argv) {
 `, "utf8");
     exitCode = command.exitCode;
   });
-  program.command("compare").description("compare two versioned analysis reports").requiredOption("--baseline <path>", "baseline JSON report").requiredOption("--current <path>", "current JSON report").option("-t, --tolerance <percent>", "allowed directional regression percentage", parseTolerance, 5).option("-o, --output <path>", "write the Markdown comparison to a file").action(async (options) => {
+  program.command("compare").description("compare two versioned analysis reports").requiredOption("--baseline <path>", "baseline JSON report").requiredOption("--current <path>", "current JSON report").option(
+    "-t, --tolerance <percent>",
+    "allowed directional regression percentage",
+    parseTolerance,
+    DEFAULT_TOLERANCE_PERCENT
+  ).option("-o, --output <path>", "write the Markdown comparison to a file").action(async (options) => {
     const [baseline, current] = await Promise.all([
       loadAnalysisReport(options.baseline),
       loadAnalysisReport(options.current)

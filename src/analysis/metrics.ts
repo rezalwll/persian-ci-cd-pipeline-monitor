@@ -4,6 +4,8 @@ import { queueDurationMs, runDurationMs } from './duration.js';
 import { groupRunAttempts } from './group-runs.js';
 import { percentile } from './statistics.js';
 
+const P95_QUANTILE = 0.95;
+
 function percent(numerator: number, denominator: number): number {
   return denominator === 0 ? 0 : (numerator / denominator) * 100;
 }
@@ -29,7 +31,7 @@ export function calculateDurationP95(runs: readonly WorkflowRun[]): MetricValue 
 
   return {
     key: 'durationP95Ms',
-    value: durations.length === 0 ? 0 : percentile(durations, 0.95),
+    value: durations.length === 0 ? 0 : percentile(durations, P95_QUANTILE),
     unit: 'milliseconds',
     sampleSize: durations.length,
   };
@@ -57,7 +59,7 @@ export function calculateQueueP95(runs: readonly WorkflowRun[]): MetricValue {
 
   return {
     key: 'queueP95Ms',
-    value: queueTimes.length === 0 ? 0 : percentile(queueTimes, 0.95),
+    value: queueTimes.length === 0 ? 0 : percentile(queueTimes, P95_QUANTILE),
     unit: 'milliseconds',
     sampleSize: queueTimes.length,
   };

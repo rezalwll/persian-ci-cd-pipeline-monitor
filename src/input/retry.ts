@@ -12,14 +12,19 @@ const delay = async (milliseconds: number): Promise<void> => {
   await new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 };
 
+const DEFAULT_ATTEMPTS = 3;
+const DEFAULT_BASE_DELAY_MS = 250;
+const DEFAULT_MAXIMUM_DELAY_MS = 5_000;
+const DEFAULT_JITTER = 0.2;
+
 export async function withRetry<T>(
   operation: (attempt: number) => Promise<T>,
   options: RetryOptions = {},
 ): Promise<T> {
-  const attempts = options.attempts ?? 3;
-  const baseDelayMs = options.baseDelayMs ?? 250;
-  const maximumDelayMs = options.maximumDelayMs ?? 5_000;
-  const jitter = options.jitter ?? 0.2;
+  const attempts = options.attempts ?? DEFAULT_ATTEMPTS;
+  const baseDelayMs = options.baseDelayMs ?? DEFAULT_BASE_DELAY_MS;
+  const maximumDelayMs = options.maximumDelayMs ?? DEFAULT_MAXIMUM_DELAY_MS;
+  const jitter = options.jitter ?? DEFAULT_JITTER;
   const shouldRetry = options.shouldRetry ?? (() => true);
   const sleep = options.sleep ?? delay;
   const random = options.random ?? Math.random;

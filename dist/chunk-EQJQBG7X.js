@@ -1,32 +1,37 @@
 // src/domain/policy.ts
+var DEFAULT_MINIMUM_SAMPLE_SIZE = 5;
+var DEFAULT_SUCCESS_RATE_PERCENT = 95;
+var DEFAULT_DURATION_BUDGET_MINUTES = 15;
+var SECONDS_PER_MINUTE = 60;
+var DEFAULT_FLAKY_JOB_RATE_PERCENT = 3;
 var defaultPolicy = {
   version: 1,
-  minimumSampleSize: 5,
+  minimumSampleSize: DEFAULT_MINIMUM_SAMPLE_SIZE,
   includeBranches: ["main", "master"],
   excludeEvents: ["workflow_dispatch"],
   rules: [
     {
       metric: "successRate",
       comparison: "atLeast",
-      threshold: 95,
+      threshold: DEFAULT_SUCCESS_RATE_PERCENT,
       severity: "error"
     },
     {
       metric: "durationP95Ms",
       comparison: "atMost",
-      threshold: 15 * 60 * 1e3,
+      threshold: DEFAULT_DURATION_BUDGET_MINUTES * SECONDS_PER_MINUTE * 1e3,
       severity: "warning"
     },
     {
       metric: "queueP95Ms",
       comparison: "atMost",
-      threshold: 2 * 60 * 1e3,
+      threshold: 2 * SECONDS_PER_MINUTE * 1e3,
       severity: "warning"
     },
     {
       metric: "flakyJobRate",
       comparison: "atMost",
-      threshold: 3,
+      threshold: DEFAULT_FLAKY_JOB_RATE_PERCENT,
       severity: "error"
     }
   ]
@@ -95,6 +100,7 @@ function percentile(values, quantile) {
 }
 
 // src/analysis/metrics.ts
+var P95_QUANTILE = 0.95;
 function percent(numerator, denominator) {
   return denominator === 0 ? 0 : numerator / denominator * 100;
 }
@@ -115,7 +121,7 @@ function calculateDurationP95(runs) {
   const durations = terminalRuns(runs).map(runDurationMs);
   return {
     key: "durationP95Ms",
-    value: durations.length === 0 ? 0 : percentile(durations, 0.95),
+    value: durations.length === 0 ? 0 : percentile(durations, P95_QUANTILE),
     unit: "milliseconds",
     sampleSize: durations.length
   };
@@ -138,7 +144,7 @@ function calculateQueueP95(runs) {
   const queueTimes = terminalRuns(runs).map(queueDurationMs);
   return {
     key: "queueP95Ms",
-    value: queueTimes.length === 0 ? 0 : percentile(queueTimes, 0.95),
+    value: queueTimes.length === 0 ? 0 : percentile(queueTimes, P95_QUANTILE),
     unit: "milliseconds",
     sampleSize: queueTimes.length
   };
@@ -329,11 +335,14 @@ var severityLabel = {
   warning: "WARN",
   error: "ERROR"
 };
+var MILLISECONDS_PER_MINUTE = 6e4;
+var METRIC_LABEL_WIDTH = 18;
+var METRIC_VALUE_WIDTH = 8;
 function formatValue2(metric) {
   if (metric.unit === "percent") {
     return `${metric.value.toFixed(1)}%`;
   }
-  return metric.value >= 6e4 ? `${(metric.value / 6e4).toFixed(1)}m` : `${Math.round(metric.value / 1e3)}s`;
+  return metric.value >= MILLISECONDS_PER_MINUTE ? `${(metric.value / MILLISECONDS_PER_MINUTE).toFixed(1)}m` : `${Math.round(metric.value / 1e3)}s`;
 }
 function colorSeverity(severity, value, color) {
   if (!color) return value;
@@ -343,7 +352,7 @@ function colorSeverity(severity, value, color) {
 }
 function renderText(result, color = false) {
   const metricLines = Object.values(result.metrics).map(
-    (metric) => `  ${metric.key.padEnd(18)} ${formatValue2(metric).padStart(8)}  n=${metric.sampleSize}`
+    (metric) => `  ${metric.key.padEnd(METRIC_LABEL_WIDTH)} ${formatValue2(metric).padStart(METRIC_VALUE_WIDTH)}  n=${metric.sampleSize}`
   );
   const findingLines = result.findings.length === 0 ? ["  No policy findings."] : result.findings.map((finding) => colorSeverity(
     finding.severity,
@@ -468,6 +477,7 @@ var conclusionSchema = z2.enum([
   "neutral",
   "action_required"
 ]);
+var MINIMUM_SHORT_SHA_LENGTH = 7;
 var jobSchema = z2.object({
   id: z2.number().int().positive(),
   name: z2.string().min(1),
@@ -482,7 +492,7 @@ var runSchema = z2.object({
   name: z2.string().min(1),
   path: z2.string().min(1),
   head_branch: z2.string().min(1),
-  head_sha: z2.string().min(7),
+  head_sha: z2.string().min(MINIMUM_SHORT_SHA_LENGTH),
   event: z2.string().min(1),
   conclusion: conclusionSchema,
   created_at: z2.string().datetime({ offset: true }),
@@ -608,12 +618,13 @@ var TOKEN_PATTERNS = [
   /\bgithub_pat_[A-Za-z0-9_]{20,}\b/gu,
   /\bBearer\s+[A-Za-z0-9._~-]{12,}\b/giu
 ];
+var MINIMUM_SECRET_LENGTH = 5;
 function redactText(source, secrets = []) {
   let redacted = source;
   for (const pattern of TOKEN_PATTERNS) {
     redacted = redacted.replace(pattern, "[REDACTED]");
   }
-  for (const secret of [...secrets].filter((value) => value.length >= 5).toSorted(
+  for (const secret of [...secrets].filter((value) => value.length >= MINIMUM_SECRET_LENGTH).toSorted(
     (left, right) => right.length - left.length
   )) {
     redacted = redacted.replaceAll(secret, "[REDACTED]");

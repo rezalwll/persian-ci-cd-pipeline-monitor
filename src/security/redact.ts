@@ -4,6 +4,8 @@ const TOKEN_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._~-]{12,}\b/giu,
 ] as const;
 
+const MINIMUM_SECRET_LENGTH = 5;
+
 export function redactText(source: string, secrets: readonly string[] = []): string {
   let redacted = source;
 
@@ -11,7 +13,7 @@ export function redactText(source: string, secrets: readonly string[] = []): str
     redacted = redacted.replace(pattern, '[REDACTED]');
   }
 
-  for (const secret of [...secrets].filter((value) => value.length >= 5).toSorted(
+  for (const secret of [...secrets].filter((value) => value.length >= MINIMUM_SECRET_LENGTH).toSorted(
     (left, right) => right.length - left.length,
   )) {
     redacted = redacted.replaceAll(secret, '[REDACTED]');

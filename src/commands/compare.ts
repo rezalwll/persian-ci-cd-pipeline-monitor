@@ -17,10 +17,12 @@ export interface ComparisonResult {
 
 const lowerIsBetter = new Set<MetricKey>(['durationP95Ms', 'queueP95Ms', 'flakyJobRate']);
 
+export const DEFAULT_TOLERANCE_PERCENT = 5;
+
 export function compareResults(
   baseline: AnalysisResult,
   current: AnalysisResult,
-  tolerancePercent = 5,
+  tolerancePercent = DEFAULT_TOLERANCE_PERCENT,
 ): ComparisonResult {
   if (baseline.repository !== current.repository) {
     throw new Error('Baseline and current reports must target the same repository');
