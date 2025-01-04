@@ -1,0 +1,46 @@
+{
+  "name": "release-lens",
+  "version": "0.1.0",
+  "description": "Policy-driven release health analysis for GitHub Actions",
+  "type": "module",
+  "bin": {
+    "release-lens": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "action.yml"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/cli.ts --format esm --dts --clean",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "dependencies": {
+    "commander": "12.1.0",
+    "picocolors": "1.1.1",
+    "yaml": "2.6.1",
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.17.0",
+    "@types/node": "22.10.2",
+    "@vitest/coverage-v8": "2.1.8",
+    "eslint": "9.17.0",
+    "tsup": "8.3.5",
+    "typescript": "5.7.2",
+    "typescript-eslint": "8.18.2",
+    "vitest": "2.1.8"
+  }
+}
