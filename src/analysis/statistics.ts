@@ -21,3 +21,20 @@ export function median(values: readonly number[]): number {
   const upper = sorted[middle] ?? 0;
   return (lower + upper) / 2;
 }
+
+export function percentile(values: readonly number[], quantile: number): number {
+  assertFiniteSample(values);
+
+  if (!Number.isFinite(quantile) || quantile < 0 || quantile > 1) {
+    throw new RangeError('A quantile must be between zero and one');
+  }
+
+  const sorted = [...values].sort((left, right) => left - right);
+  const rank = (sorted.length - 1) * quantile;
+  const lowerIndex = Math.floor(rank);
+  const upperIndex = Math.ceil(rank);
+  const lower = sorted[lowerIndex] ?? 0;
+  const upper = sorted[upperIndex] ?? lower;
+
+  return lower + (upper - lower) * (rank - lowerIndex);
+}
