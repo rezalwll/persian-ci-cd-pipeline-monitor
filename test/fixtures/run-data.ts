@@ -1,3 +1,5 @@
+import type { WorkflowRun } from '../../src/domain/run.js';
+
 export const runFixture = {
   repository: 'acme/payments',
   generated_at: '2025-03-10T08:00:00Z',
@@ -36,3 +38,21 @@ export const runFixture = {
     },
   ],
 } as const;
+
+export function makeRun(overrides: Partial<WorkflowRun> = {}): WorkflowRun {
+  return {
+    id: 1,
+    name: 'release',
+    workflowPath: '.github/workflows/release.yml',
+    headBranch: 'main',
+    headSha: '0123456789abcdef',
+    event: 'push',
+    conclusion: 'success',
+    createdAt: '2025-01-01T10:00:00Z',
+    runStartedAt: '2025-01-01T10:00:30Z',
+    updatedAt: '2025-01-01T10:10:00Z',
+    attempt: 1,
+    jobs: [],
+    ...overrides,
+  };
+}
