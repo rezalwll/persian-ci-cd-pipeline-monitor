@@ -34,3 +34,20 @@ export function calculateDurationP95(runs: readonly WorkflowRun[]): MetricValue 
     sampleSize: durations.length,
   };
 }
+
+export function calculateFlakyJobRate(runs: readonly WorkflowRun[]): MetricValue {
+  const groups = groupRunAttempts(runs);
+  const flakyGroups = groups.filter((group) => {
+    const terminal = group.attempts.at(-1);
+    const priorAttempts = group.attempts.slice(0, -1);
+    return terminal?.conclusion === 'success'
+      && priorAttempts.some((attempt) => attempt.conclusion === 'failure' || attempt.conclusion === 'timed_out');
+  });
+
+  return {
+    key: 'flakyJobRate',
+    value: percent(flakyGroups.length, groups.length),
+    unit: 'percent',
+    sampleSize: groups.length,
+  };
+}
