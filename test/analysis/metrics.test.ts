@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   calculateDurationP95,
+  calculateFlakyJobRate,
   calculateSuccessRate,
 } from '../../src/analysis/metrics.js';
 import { makeRun } from '../fixtures/run-data.js';
@@ -24,6 +25,26 @@ describe('calculateSuccessRate', () => {
       unit: 'percent',
       sampleSize: 0,
     });
+  });
+});
+
+describe('calculateFlakyJobRate', () => {
+  it('counts failed attempts that recover on the same revision', () => {
+    const metric = calculateFlakyJobRate([
+      makeRun({ id: 1, attempt: 1, conclusion: 'failure' }),
+      makeRun({ id: 2, attempt: 2, conclusion: 'success' }),
+      makeRun({ id: 3, headSha: 'stable-sha', conclusion: 'success' }),
+    ]);
+
+    expect(metric.value).toBe(50);
+    expect(metric.sampleSize).toBe(2);
+  });
+
+  it('does not label persistent failure as flakiness', () => {
+    expect(calculateFlakyJobRate([
+      makeRun({ attempt: 1, conclusion: 'failure' }),
+      makeRun({ attempt: 2, conclusion: 'failure' }),
+    ]).value).toBe(0);
   });
 });
 
