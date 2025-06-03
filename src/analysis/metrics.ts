@@ -1,6 +1,6 @@
 import type { MetricValue } from '../domain/result.js';
 import type { WorkflowRun } from '../domain/run.js';
-import { runDurationMs } from './duration.js';
+import { queueDurationMs, runDurationMs } from './duration.js';
 import { groupRunAttempts } from './group-runs.js';
 import { percentile } from './statistics.js';
 
@@ -49,5 +49,16 @@ export function calculateFlakyJobRate(runs: readonly WorkflowRun[]): MetricValue
     value: percent(flakyGroups.length, groups.length),
     unit: 'percent',
     sampleSize: groups.length,
+  };
+}
+
+export function calculateQueueP95(runs: readonly WorkflowRun[]): MetricValue {
+  const queueTimes = terminalRuns(runs).map(queueDurationMs);
+
+  return {
+    key: 'queueP95Ms',
+    value: queueTimes.length === 0 ? 0 : percentile(queueTimes, 0.95),
+    unit: 'milliseconds',
+    sampleSize: queueTimes.length,
   };
 }
