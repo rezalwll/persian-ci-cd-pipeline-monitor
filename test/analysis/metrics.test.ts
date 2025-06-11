@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   calculateDurationP95,
   calculateFlakyJobRate,
+  calculateQueueP95,
   calculateSuccessRate,
 } from '../../src/analysis/metrics.js';
 import { makeRun } from '../fixtures/run-data.js';
@@ -25,6 +26,23 @@ describe('calculateSuccessRate', () => {
       unit: 'percent',
       sampleSize: 0,
     });
+  });
+});
+
+describe('calculateQueueP95', () => {
+  it('measures scheduler delay independently from runtime', () => {
+    const metric = calculateQueueP95([
+      makeRun({ headSha: 'queue-one', runStartedAt: '2025-01-01T10:00:10Z' }),
+      makeRun({ headSha: 'queue-two', runStartedAt: '2025-01-01T10:00:30Z' }),
+      makeRun({ headSha: 'queue-three', runStartedAt: '2025-01-01T10:01:00Z' }),
+    ]);
+
+    expect(metric.value).toBe(57_000);
+    expect(metric.unit).toBe('milliseconds');
+  });
+
+  it('reports an empty queue sample without throwing', () => {
+    expect(calculateQueueP95([]).sampleSize).toBe(0);
   });
 });
 
