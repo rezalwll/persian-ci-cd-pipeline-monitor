@@ -22,7 +22,9 @@ const findingSchema = z.object({
   message: z.string().min(1),
   actual: z.number().finite(),
   threshold: z.number().finite(),
-  helpUri: z.string().url().optional(),
+  helpUri: z.string().url().refine((value) => value.startsWith('https://'), {
+    message: 'Help links must use HTTPS',
+  }).optional(),
 }).strict();
 
 const resultSchema = z.object({
