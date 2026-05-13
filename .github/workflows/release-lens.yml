@@ -1,0 +1,93 @@
+name: Release Lens
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: Branch whose workflow history should be evaluated
+        required: false
+        type: string
+        default: main
+      policy-path:
+        description: Optional policy file in the caller repository
+        required: false
+        type: string
+        default: ''
+      fail-on-budget:
+        description: Fail the reusable workflow when an error budget is exceeded
+        required: false
+        type: boolean
+        default: true
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch whose workflow history should be evaluated
+        required: false
+        type: string
+        default: main
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: release-lens-${{ github.repository }}-${{ inputs.branch || 'main' }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze release health
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out caller repository
+        uses: actions/checkout@v4
+
+      - name: Check out Release Lens
+        uses: actions/checkout@v4
+        with:
+          repository: rezalwll/release-lens
+          ref: v1
+          path: .release-lens
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: .release-lens/package-lock.json
+
+      - name: Build isolated CLI
+        working-directory: .release-lens
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+
+      - name: Evaluate workflow history
+        id: analyze
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          node .release-lens/dist/cli.js analyze
+          --repository "${{ github.repository }}"
+          --branch "${{ inputs.branch || 'main' }}"
+          --format markdown
+          --output release-lens-report.md
+
+      - name: Publish job summary
+        if: always()
+        run: cat release-lens-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload health report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-lens-report
+          path: release-lens-report.md
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce release budget
+        if: inputs.fail-on-budget && steps.analyze.outcome == 'failure'
+        run: exit 1
