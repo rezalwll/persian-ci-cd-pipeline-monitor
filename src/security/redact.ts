@@ -4,10 +4,6 @@ const TOKEN_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._~-]{12,}\b/giu,
 ] as const;
 
-function escapePattern(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-}
-
 export function redactText(source: string, secrets: readonly string[] = []): string {
   let redacted = source;
 
@@ -15,10 +11,10 @@ export function redactText(source: string, secrets: readonly string[] = []): str
     redacted = redacted.replace(pattern, '[REDACTED]');
   }
 
-  for (const secret of [...secrets].filter((value) => value.length >= 6).toSorted(
+  for (const secret of [...secrets].filter((value) => value.length >= 5).toSorted(
     (left, right) => right.length - left.length,
   )) {
-    redacted = redacted.replace(new RegExp(escapePattern(secret), 'gu'), '[REDACTED]');
+    redacted = redacted.replaceAll(secret, '[REDACTED]');
   }
 
   return redacted;
