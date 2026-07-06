@@ -19,7 +19,7 @@ describe('duration metrics', () => {
   });
 
   it('accepts equivalent timestamps with different offsets', () => {
-    expect(durationBetween('2025-01-01T12:00:00+03:30', '2025-01-01T09:00:30Z')).toBe(30_000);
+    expect(durationBetween('2025-01-01T12:00:00+03:30', '2025-01-01T08:30:30Z')).toBe(30_000);
   });
 
   it('rejects reversed and malformed boundaries', () => {
