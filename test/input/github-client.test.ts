@@ -15,7 +15,8 @@ describe('GitHubActionsClient', () => {
     const fetchStub: typeof fetch = async (input, init) => {
       const url = String(input);
       const headers = init?.headers as Record<string, string>;
-      requests.push({ url, authorization: headers.authorization });
+      const authorization = headers['authorization'];
+      requests.push(authorization === undefined ? { url } : { url, authorization });
       return url.includes('/jobs?')
         ? jsonResponse({ jobs: runFixture.runs[0].jobs })
         : jsonResponse({ workflow_runs: [{ ...runFixture.runs[0], jobs: undefined }] });

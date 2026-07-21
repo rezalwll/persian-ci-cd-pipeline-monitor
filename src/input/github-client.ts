@@ -29,15 +29,17 @@ const runSchema = z.object({
 const runPageSchema = z.object({ workflow_runs: z.array(runSchema) });
 const jobPageSchema = z.object({ jobs: z.array(jobSchema) });
 
+type Fetch = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+
 export interface GitHubClientOptions {
   readonly token: string;
-  readonly fetch?: typeof fetch;
+  readonly fetch?: Fetch;
   readonly apiUrl?: string;
   readonly now?: () => Date;
 }
 
 export class GitHubActionsClient {
-  readonly #fetch: typeof fetch;
+  readonly #fetch: Fetch;
   readonly #apiUrl: string;
   readonly #now: () => Date;
   readonly #headers: HeadersInit;
@@ -61,7 +63,8 @@ export class GitHubActionsClient {
       const requestId = response.headers.get('x-github-request-id');
       throw new Error(`GitHub API returned ${response.status}${requestId === null ? '' : ` (${requestId})`}`);
     }
-    return response.json() as Promise<unknown>;
+    const body: unknown = await response.json();
+    return body;
   }
 
   async collect(repository: string, branch = 'main', limit = 100): Promise<RunDataset> {

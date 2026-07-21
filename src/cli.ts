@@ -65,6 +65,7 @@ export async function main(argv: readonly string[] = process.argv): Promise<numb
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]?.replaceAll('\\', '/')}`) {
+const entryPath = process.argv[1];
+if (entryPath !== undefined && import.meta.url === `file://${entryPath.replaceAll('\\', '/')}`) {
   process.exitCode = await main();
 }

@@ -20,7 +20,7 @@ export interface Finding {
   readonly message: string;
   readonly actual: number;
   readonly threshold: number;
-  readonly helpUri?: string;
+  readonly helpUri?: string | undefined;
 }
 
 export interface AnalysisResult {

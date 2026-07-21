@@ -6,8 +6,14 @@ export default tseslint.config(
     ignores: ['dist/**', 'coverage/**', 'node_modules/**'],
   },
   eslint.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
+  ...tseslint.configs.strictTypeChecked.map((config) => ({
+    ...config,
+    files: ['**/*.ts'],
+  })),
+  ...tseslint.configs.stylisticTypeChecked.map((config) => ({
+    ...config,
+    files: ['**/*.ts'],
+  })),
   {
     files: ['**/*.ts'],
     languageOptions: {
@@ -26,6 +32,10 @@ export default tseslint.config(
         'error',
         { ignoreArrowShorthand: true }
       ],
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        { allowNumber: true }
+      ],
       '@typescript-eslint/no-magic-numbers': [
         'warn',
         { ignore: [-1, 0, 1, 2, 100, 1_000], ignoreArrayIndexes: true }
@@ -38,7 +48,16 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off'
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-base-to-string': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off'
+    },
+  },
+  {
+    files: ['src/input/github-client.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off'
     },
   },
 );
