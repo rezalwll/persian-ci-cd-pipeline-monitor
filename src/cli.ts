@@ -2,6 +2,7 @@
 import { writeFile } from 'node:fs/promises';
 import { Command, Option } from 'commander';
 import { analyze, type OutputFormat } from './commands/analyze.js';
+import { loadPolicy } from './config/load-policy.js';
 import { GitHubActionsClient } from './input/github-client.js';
 import { loadDatasetFile } from './input/load-file.js';
 import { loadDatasetStream } from './input/load-stream.js';
@@ -13,6 +14,7 @@ interface AnalyzeOptions {
   readonly branch: string;
   readonly format: OutputFormat;
   readonly output?: string;
+  readonly policy?: string;
   readonly color: boolean;
 }
 
@@ -42,6 +44,7 @@ export async function main(argv: readonly string[] = process.argv): Promise<numb
     .addOption(new Option('-f, --format <format>', 'report format')
       .choices(['text', 'json', 'markdown', 'sarif', 'github'])
       .default('text'))
+    .option('-p, --policy <path>', 'explicit JSON or YAML release policy')
     .option('-o, --output <path>', 'write report to a file')
     .option('--no-color', 'disable ANSI color')
     .action(async (options: AnalyzeOptions) => {
@@ -49,7 +52,8 @@ export async function main(argv: readonly string[] = process.argv): Promise<numb
         throw new Error('--input and --repository are mutually exclusive');
       }
       const dataset = await loadInput(options);
-      const command = analyze({ dataset, format: options.format, color: options.color });
+      const { policy } = await loadPolicy(options.policy);
+      const command = analyze({ dataset, policy, format: options.format, color: options.color });
       if (options.output === undefined) process.stdout.write(`${command.output}\n`);
       else await writeFile(options.output, `${command.output}\n`, 'utf8');
       exitCode = command.exitCode;
