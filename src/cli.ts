@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import { writeFile } from 'node:fs/promises';
-import { Command, Option } from 'commander';
+import { Command, InvalidArgumentError, Option } from 'commander';
 import { analyze, type OutputFormat } from './commands/analyze.js';
+import { compareResults, renderComparisonMarkdown } from './commands/compare.js';
 import { loadPolicy } from './config/load-policy.js';
 import { GitHubActionsClient } from './input/github-client.js';
 import { loadDatasetFile } from './input/load-file.js';
+import { loadAnalysisReport } from './input/load-report.js';
 import { loadDatasetStream } from './input/load-stream.js';
 import { safeErrorMessage } from './security/redact.js';
 
@@ -16,6 +18,21 @@ interface AnalyzeOptions {
   readonly output?: string;
   readonly policy?: string;
   readonly color: boolean;
+}
+
+interface CompareOptions {
+  readonly baseline: string;
+  readonly current: string;
+  readonly tolerance: number;
+  readonly output?: string;
+}
+
+function parseTolerance(value: string): number {
+  const tolerance = Number(value);
+  if (!Number.isFinite(tolerance) || tolerance < 0) {
+    throw new InvalidArgumentError('tolerance must be a non-negative number');
+  }
+  return tolerance;
 }
 
 async function loadInput(options: AnalyzeOptions): Promise<Awaited<ReturnType<typeof loadDatasetFile>>> {
@@ -57,6 +74,24 @@ export async function main(argv: readonly string[] = process.argv): Promise<numb
       if (options.output === undefined) process.stdout.write(`${command.output}\n`);
       else await writeFile(options.output, `${command.output}\n`, 'utf8');
       exitCode = command.exitCode;
+    });
+
+  program.command('compare')
+    .description('compare two versioned analysis reports')
+    .requiredOption('--baseline <path>', 'baseline JSON report')
+    .requiredOption('--current <path>', 'current JSON report')
+    .option('-t, --tolerance <percent>', 'allowed directional regression percentage', parseTolerance, 5)
+    .option('-o, --output <path>', 'write the Markdown comparison to a file')
+    .action(async (options: CompareOptions) => {
+      const [baseline, current] = await Promise.all([
+        loadAnalysisReport(options.baseline),
+        loadAnalysisReport(options.current),
+      ]);
+      const comparison = compareResults(baseline, current, options.tolerance);
+      const output = renderComparisonMarkdown(comparison);
+      if (options.output === undefined) process.stdout.write(`${output}\n`);
+      else await writeFile(options.output, `${output}\n`, 'utf8');
+      exitCode = comparison.passed ? 0 : 1;
     });
 
   try {

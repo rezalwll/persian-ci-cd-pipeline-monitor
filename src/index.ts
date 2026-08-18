@@ -1,4 +1,10 @@
 export { analyze, type AnalyzeRequest, type CommandResult, type OutputFormat } from './commands/analyze.js';
+export {
+  compareResults,
+  renderComparisonMarkdown,
+  type ComparisonResult,
+  type MetricDelta,
+} from './commands/compare.js';
 export { evaluateDataset } from './analysis/evaluate.js';
 export { parsePolicy } from './config/parse-policy.js';
 export type { ReleasePolicy } from './domain/policy.js';
