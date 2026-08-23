@@ -1,0 +1,118 @@
+﻿name: Auto Review
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+  actions: read
+
+jobs:
+  basic-review:
+    name: Basic Automated Review
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for obvious hard-coded secrets
+        shell: bash
+        run: |
+          set -e
+
+          if grep -RInE "(api[_-]?key|secret|password|token)\s*[:=]\s*['\"][^'\"]{8,}" . \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            --exclude-dir=vendor \
+            --exclude-dir=.next \
+            --exclude-dir=dist \
+            --exclude-dir=build; then
+            echo "Potential hard-coded secret found."
+            exit 1
+          fi
+
+      - name: Detect project type
+        id: detect
+        shell: bash
+        run: |
+          if [ -f package.json ]; then
+            echo "node=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
+            echo "python=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Node install, lint and test
+        if: steps.detect.outputs.node == 'true'
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+          npm run lint --if-present
+          npm test --if-present
+
+      - name: Python basic checks
+        if: steps.detect.outputs.python == 'true'
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+          python -m compileall .
+
+  codeql:
+    name: CodeQL Security Scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      security-events: write
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ "javascript-typescript", "python" ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check language files
+        id: files
+        shell: bash
+        run: |
+          if [ "${{ matrix.language }}" = "javascript-typescript" ]; then
+            if find . \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" \) | grep -q .; then
+              echo "found=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "found=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+          if [ "${{ matrix.language }}" = "python" ]; then
+            if find . -name "*.py" | grep -q .; then
+              echo "found=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "found=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Initialize CodeQL
+        if: steps.files.outputs.found == 'true'
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Perform CodeQL Analysis
+        if: steps.files.outputs.found == 'true'
+        uses: github/codeql-action/analyze@v3
