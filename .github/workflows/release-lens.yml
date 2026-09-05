@@ -41,10 +41,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out caller repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Check out Release Lens
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: rezalwll/release-lens
           ref: v1
