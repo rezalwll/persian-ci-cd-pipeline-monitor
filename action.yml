@@ -1,0 +1,38 @@
+name: Release Lens
+description: Evaluate GitHub Actions history against explicit release-health budgets
+author: rezalwll
+
+inputs:
+  token:
+    description: Token used to read workflow runs
+    required: false
+    default: ${{ github.token }}
+  repository:
+    description: Repository in owner/name form
+    required: false
+    default: ${{ github.repository }}
+  branch:
+    description: Branch whose workflow history should be evaluated
+    required: false
+    default: main
+  policy:
+    description: Optional path to a JSON or YAML policy
+    required: false
+  fail-on-budget:
+    description: Fail the step when an error-level budget is exceeded
+    required: false
+    default: 'true'
+
+outputs:
+  passed:
+    description: Whether every error-level release budget passed
+  exit-code:
+    description: Release Lens policy exit code
+
+runs:
+  using: node20
+  main: dist/action.js
+
+branding:
+  icon: activity
+  color: blue
