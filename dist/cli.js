@@ -9,15 +9,15 @@ import {
   loadPolicy,
   parseRunDataset,
   safeErrorMessage
-} from "./chunk-UXLLGSVP.js";
+} from "./chunk-KQFWES66.js";
 
 // src/cli.ts
-import { writeFile } from "node:fs/promises";
+import { writeFile } from "fs/promises";
 import { Command, InvalidArgumentError, Option } from "commander";
 
 // src/input/load-file.ts
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { readFile } from "fs/promises";
+import { resolve } from "path";
 async function loadDatasetFile(path) {
   const absolutePath = resolve(path);
   let source;
@@ -36,8 +36,8 @@ async function loadDatasetFile(path) {
 }
 
 // src/input/load-report.ts
-import { readFile as readFile2 } from "node:fs/promises";
-import { resolve as resolve2 } from "node:path";
+import { readFile as readFile2 } from "fs/promises";
+import { resolve as resolve2 } from "path";
 
 // src/input/report-schema.ts
 import { z } from "zod";

@@ -3,14 +3,14 @@ import {
   analyze,
   loadPolicy,
   safeErrorMessage
-} from "./chunk-UXLLGSVP.js";
+} from "./chunk-KQFWES66.js";
 
 // src/action.ts
-import { appendFile as appendFile2 } from "node:fs/promises";
-import { pathToFileURL } from "node:url";
+import { appendFile as appendFile2 } from "fs/promises";
+import { pathToFileURL } from "url";
 
 // src/report/step-summary.ts
-import { appendFile } from "node:fs/promises";
+import { appendFile } from "fs/promises";
 var MAX_SUMMARY_BYTES = 1048576;
 async function appendGitHubStepSummary(markdown, path = process.env["GITHUB_STEP_SUMMARY"]) {
   if (path === void 0 || path.trim().length === 0) return false;

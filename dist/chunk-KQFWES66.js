@@ -386,7 +386,7 @@ function analyze(request) {
 }
 
 // src/config/parse-policy.ts
-import { extname } from "node:path";
+import { extname } from "path";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 var metricSchema = z.enum([
@@ -421,8 +421,8 @@ function parsePolicy(source, filename = "release-lens.config.json") {
 }
 
 // src/config/load-policy.ts
-import { readFile } from "node:fs/promises";
-import { isAbsolute, join, resolve } from "node:path";
+import { readFile } from "fs/promises";
+import { isAbsolute, join, resolve } from "path";
 var CANDIDATES = [
   ".release-lens.yml",
   ".release-lens.yaml",
